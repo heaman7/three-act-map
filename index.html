@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-Hant-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>三幕劇地圖</title>
+<style>
+:root{--bg:#f7f6f2;--card:#ffffff;--line:#d3d1c7;--text:#1f1f1d;--sub:#5f5e5a;--mute:#8a8983;--dot:#e3e1d9;
+--c1:#378add;--b1:#e6f1fb;--h1:#b5d4f4;--t1:#0c447c;
+--c2:#ef9f27;--b2:#faeeda;--h2:#fac775;--t2:#633806;
+--c3:#e24b4a;--b3:#fcebeb;--h3:#f09595;--t3:#791f1f}
+@media (prefers-color-scheme: dark){:root{--bg:#161615;--card:#232321;--line:#444441;--text:#f1efe8;--sub:#b4b2a9;--mute:#888780;--dot:#3a3a37;
+--b1:#0f2b47;--h1:#185fa5;--t1:#b5d4f4;
+--b2:#3a2305;--h2:#a5670f;--t2:#fac775;
+--b3:#3f1414;--h3:#a32d2d;--t3:#f7c1c1}}
+*{box-sizing:border-box}
+body{margin:0;padding:24px 16px;background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang HK","Microsoft JhengHei",sans-serif}
+.wrap{max-width:720px;margin:0 auto}
+h1{font-size:20px;font-weight:600;margin:0 0 4px}
+.sub{font-size:14px;color:var(--sub);margin:0 0 12px}
+.a1{--c:var(--c1);--b:var(--b1);--t:var(--t1)}
+.a2{--c:var(--c2);--b:var(--b2);--t:var(--t2)}
+.a3{--c:var(--c3);--b:var(--b3);--t:var(--t3)}
+.legend{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub);margin:0 0 10px;flex-wrap:wrap}
+.chip{background:var(--b);color:var(--t);border:1px solid var(--c);border-radius:999px;padding:2px 10px;font-weight:600}
+#map{position:relative;height:320px;border-radius:14px;overflow:hidden;background:var(--card);border:1px solid var(--line)}
+#map svg{position:absolute;inset:0;width:100%;height:100%}
+.ac{position:absolute;top:10px;transform:translateX(-50%);font-size:13px;font-weight:600;white-space:nowrap;background:var(--b);color:var(--t);border:1px solid var(--c);border-radius:999px;padding:2px 10px}
+.st{position:absolute;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;padding:0;font-size:20px;line-height:1;background:var(--card);border:1px solid var(--line);cursor:pointer;transition:all .25s;filter:grayscale(1);opacity:.6}
+.st.done{filter:none;opacity:1;border:2px solid var(--c)}
+.st.on{filter:none;opacity:1;width:56px;height:56px;font-size:30px;background:var(--b);border:3px solid var(--c)}
+.lb{position:absolute;transform:translate(-50%,0);font-size:12px;color:var(--sub);white-space:nowrap;pointer-events:none}
+.lb.on{color:var(--t);font-weight:600}
+.card{display:flex;gap:16px;align-items:stretch;background:var(--card);border:1px solid var(--line);border-left:6px solid var(--c);border-radius:14px;padding:14px 18px 14px 14px;margin-top:12px}
+#scene{width:150px;flex-shrink:0;border-radius:10px;background:var(--b);display:flex;align-items:center;justify-content:center;gap:4px;font-size:38px;line-height:1;min-height:96px}
+#nm{font-size:22px;font-weight:600}
+#og{font-size:12px;color:var(--mute);margin-left:8px}
+#ds{font-size:16px;margin:2px 0 6px}
+#ex{font-size:14px;color:var(--sub);margin:0 0 8px}
+.meter{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--sub)}
+.meter i{width:22px;height:8px;border-radius:4px;background:var(--dot);display:block}
+.meter i.f{background:var(--c)}
+.logline{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin:0 0 14px}
+.logline b{display:block;font-size:12px;font-weight:600;color:var(--mute);margin-bottom:2px}
+.logline p{margin:0;font-size:16px;line-height:1.6}
+.arc{display:flex;align-items:stretch;gap:6px;margin-top:12px}
+.arc .sg{flex:1;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--card);opacity:.55;transition:all .25s}
+.arc .sg.on{opacity:1;background:var(--b);border:2px solid var(--c)}
+.arc .sg b{display:block;font-size:15px;font-weight:600;color:var(--text)}
+.arc .sg.on b{color:var(--t)}
+.arc .sg span{font-size:12px;color:var(--sub)}
+.arc .ar{align-self:center;color:var(--mute);font-size:14px}
+.arct{font-size:12px;font-weight:600;color:var(--mute);margin:14px 0 0}
+#gr{font-size:14px;margin:0 0 8px;color:var(--t);font-weight:600}
+.pk{position:absolute;transform:translate(-50%,-100%);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;background:var(--text);color:var(--bg);border:0;border-radius:999px;padding:3px 10px;cursor:pointer}
+.pk::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--text);border-bottom:0}
+#pkt{font-size:14px;margin:0 0 8px;padding:6px 10px;border-radius:8px;background:var(--text);color:var(--bg);display:none}
+.nav{display:flex;justify-content:center;gap:8px;margin-top:12px}
+.nav button{font:inherit;font-size:14px;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer}
+@media (max-width:520px){#scene{width:96px;font-size:26px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>三幕劇地圖</h1>
+  <p class="sub">《魔雪奇緣》Elsa 條線 · 撳路標睇每一步</p>
+  <div class="logline"><b>Logline</b><p>怕傷到人嘅冰魔法女王,秘密曝光後逃上雪山,卻令王國陷入永冬。佢要學識用愛代替恐懼,先救到妹妹同王國。</p></div>
+  <div class="legend">情緒力度
+    <span class="chip a1">平靜</span>→<span class="chip a2">升溫</span>→<span class="chip a3">爆發</span>
+    <span style="margin-left:8px">💥 = 心理衝突高峰</span>
+  </div>
+
+  <div id="map">
+    <svg viewBox="0 0 680 320" preserveAspectRatio="none" aria-hidden="true">
+      <defs><clipPath id="hill"><path d="M0,245 L40,242 L100,242 C130,242 140,230 160,225 C200,215 220,190 250,180 C290,165 310,145 340,140 C390,135 420,270 460,270 C495,270 510,215 535,200 C565,180 575,105 600,105 C625,105 630,200 655,200 L680,200 L680,320 L0,320 Z"/></clipPath></defs>
+      <rect x="0" y="0" width="170" height="320" fill="var(--b1)" opacity=".45"/>
+      <rect x="170" y="0" width="340" height="320" fill="var(--b2)" opacity=".45"/>
+      <rect x="510" y="0" width="170" height="320" fill="var(--b3)" opacity=".45"/>
+      <g clip-path="url(#hill)">
+        <rect x="0" y="0" width="170" height="320" fill="var(--h1)"/>
+        <rect x="170" y="0" width="340" height="320" fill="var(--h2)"/>
+        <rect x="510" y="0" width="170" height="320" fill="var(--h3)"/>
+      </g>
+      <line x1="170" y1="40" x2="170" y2="320" stroke="var(--card)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+      <line x1="510" y1="40" x2="510" y2="320" stroke="var(--card)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <span class="ac a1" style="left:12.5%">第一幕 · 開局</span>
+    <span class="ac a2" style="left:50%">第二幕 · 對抗</span>
+    <span class="ac a3" style="left:87.5%">第三幕 · 收尾</span>
+
+
+    <button class="pk" data-i="4" style="left:50%;top:calc(43.8% - 36px)">💥 Elsa 高峰</button>
+    <button class="pk" data-i="7" style="left:88.2%;top:calc(32.8% - 36px)">💥 Anna 高峰</button>
+
+    <button class="st a1 on" style="left:5.9%;top:75.6%" aria-label="開場">🏠</button><span class="lb a1 on" style="left:5.9%;top:calc(75.6% + 32px)">開場</span>
+    <button class="st a1" style="left:14.7%;top:75.6%" aria-label="出事">⚡</button><span class="lb a1" style="left:14.7%;top:calc(75.6% + 32px)">出事</span>
+    <button class="st a1" style="left:23.5%;top:70.3%" aria-label="出發">🚪</button><span class="lb a1" style="left:23.5%;top:calc(70.3% + 32px)">出發</span>
+    <button class="st a2" style="left:36.8%;top:56.3%" aria-label="闖關">⛰️</button><span class="lb a2" style="left:36.8%;top:calc(56.3% + 32px)">闖關</span>
+    <button class="st a2" style="left:50%;top:43.8%" aria-label="轉折">🔀</button><span class="lb a2" style="left:50%;top:calc(43.8% + 32px)">轉折</span>
+    <button class="st a2" style="left:67.6%;top:84.4%" aria-label="谷底">🌧️</button><span class="lb a2" style="left:67.6%;top:calc(84.4% - 50px)">谷底</span>
+    <button class="st a3" style="left:78.7%;top:62.5%" aria-label="真相">💡</button><span class="lb a3" style="left:78.7%;top:calc(62.5% + 32px)">真相</span>
+    <button class="st a3" style="left:88.2%;top:32.8%" aria-label="決戰">⚔️</button><span class="lb a3" style="left:88.2%;top:calc(32.8% + 32px)">決戰</span>
+    <button class="st a3" style="left:95.6%;top:62.5%" aria-label="新開始">🌅</button><span class="lb a3" style="left:95%;top:calc(62.5% + 32px)">新開始</span>
+  </div>
+
+  <p class="arct">主角成長 · Elsa 點樣變</p>
+  <div class="arc" id="arc">
+    <div class="sg a1 on"><b>😨 壓抑</b><span>驚傷到人,收埋魔法同感受</span></div>
+    <span class="ar">→</span>
+    <div class="sg a2"><b>🏃‍♀️ 逃避</b><span>以為一個人先至安全</span></div>
+    <span class="ar">→</span>
+    <div class="sg a3"><b>💖 接納</b><span>用愛控制魔法,打開城門</span></div>
+  </div>
+
+  <div class="card a1" id="card">
+    <div id="scene">🏰👧❄️</div>
+    <div>
+      <div><span id="nm">開場</span><span id="og">鋪陳</span></div>
+      <p id="ds">主角平時點樣過日子。</p>
+      <p id="ex">🎬 Elsa 天生識冰魔法,細個誤傷妹妹 Anna,之後俾父母關埋城門隔離。</p>
+      <p id="gr">🌱 佢嘅心態:收埋自己,唔畀人接近。</p>
+      <p id="pkt"></p>
+      <div class="meter" id="meter">情緒力度 <i class="f"></i><i></i><i></i><i></i><i></i></div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button id="pv" aria-label="上一步">←</button>
+    <button id="pl">▶ 由頭行一次</button>
+    <button id="nx" aria-label="下一步">→</button>
+  </div>
+</div>
+<script>
+const B=[
+["🏰👧❄️",1,"開場","鋪陳","主角平時點樣過日子。","Elsa 天生識冰魔法,細個誤傷妹妹 Anna,之後俾父母關埋城門隔離。","收埋自己,唔畀人接近。"],
+["👑😱🧊",2,"出事","催化事件","有件事打破咗平靜。","加冕晚宴上同 Anna 為訂婚嘈交,一激動魔法當眾曝光,人人驚恐。","最驚嘅事成真:秘密守唔住。"],
+["🏔️🎶🏯",2,"出發","情節點一","冇得返轉頭,被迫踏出去。","逃上北山,放開壓抑咗多年嘅魔法,起冰宮隱居,免得再傷到 Anna 同王國。","第一次做返自己,但代價係孤立。"],
+["👭🥶🌨️",3,"闖關","上升動作","難題一個接一個。","Anna 上山搵佢,佢先知自己凍咗成個王國,又唔識解。","發現逃避一樣會傷到人。"],
+["💥💙🧊",4,"轉折","中點","局勢大變,要改變做法。","一時激動,冰擊中 Anna 個心。","愈驚愈失控,趕走最親嘅人。"],
+["⛓️😞🌑",4,"谷底","靈魂暗夜","輸到乜都冇,最絕望。","Hans 帶兵攻入冰宮,Elsa 被捉返王國鎖住。","連自由都冇埋,信心跌到最低。"],
+["🤥🗡️💔",5,"真相","突轉與發現","真相大白,命運逆轉。","Hans 向 Anna 露出真面目;Elsa 逃獄後,Hans 呃佢話 Anna 俾佢害死,Elsa 崩潰。","以為害死咗妹妹,放棄抵抗。"],
+["⚔️🛡️🧊",5,"決戰","高潮","最後一搏。","Hans 揮劍,Anna 擋喺 Elsa 前面,變成冰像。","親眼見到妹妹肯為佢犧牲。"],
+["☀️💖🌷",2,"新開始","宣洩與落幕","塵埃落定,有咗新秩序。","真愛解凍 Anna,Elsa 明白愛先控制到魔法,王國回春。","明白愛先係答案,唔再怕自己。"]];
+const $=id=>document.getElementById(id);
+const sts=[...document.querySelectorAll('.st')],lbs=[...document.querySelectorAll('.lb')];
+let cur=0,tm=null;
+function go(i){cur=(i+9)%9;const b=B[cur],a=' a'+(Math.floor(cur/3)+1);
+$('scene').textContent=b[0];$('nm').textContent=b[2];$('og').textContent=b[3];$('ds').textContent=b[4];$('ex').textContent='🎬 '+b[5];
+$('card').className='card'+a;$('pkt').textContent=PK[cur]||'';$('pkt').style.display=PK[cur]?'block':'none';$('gr').textContent='🌱 佢嘅心態:'+b[6];
+[...$('arc').querySelectorAll('.sg')].forEach((g,j)=>g.className='sg a'+(j+1)+(j===Math.floor(cur/3)?' on':''));
+[...$('meter').querySelectorAll('i')].forEach((d,j)=>d.className=j<b[1]?'f':'');
+sts.forEach((t,j)=>t.className='st a'+(Math.floor(j/3)+1)+(j===cur?' on':j<cur?' done':''));
+lbs.forEach((l,j)=>l.className='lb a'+(Math.floor(j/3)+1)+(j===cur?' on':''))}
+const PK={4:"💥 Elsa 心理衝突高峰:想親近妹妹,又深信自己一接近就會害人。",7:"💥 Anna 心理衝突高峰:等 Kristoff 一吻救自己,定擋劍救家姐,要即刻揀。"};
+function stop(){if(tm){clearInterval(tm);tm=null;$('pl').textContent='▶ 由頭行一次'}}
+sts.forEach((t,i)=>t.onclick=()=>{stop();go(i)});
+document.querySelectorAll('.pk').forEach(k=>k.onclick=()=>{stop();go(+k.dataset.i)});
+$('pl').onclick=()=>{if(tm){stop();return}go(0);$('pl').textContent='■ 停';tm=setInterval(()=>{if(cur===8){stop();return}go(cur+1)},1800)};
+$('pv').onclick=()=>{stop();go(cur-1)};$('nx').onclick=()=>{stop();go(cur+1)};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){stop();go(cur+1)}if(e.key==='ArrowLeft'){stop();go(cur-1)}});
+</script>
+</body>
+</html>
